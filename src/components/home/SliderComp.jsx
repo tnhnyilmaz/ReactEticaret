@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { memo } from 'react';
 import Slider from 'react-slick';
 const SliderComp = () => {
+    console.log("slidercomp rendered")
     const settings = {
         dots: true,
         infinite: true,
@@ -34,4 +35,4 @@ const SliderComp = () => {
     )
 }
 
-export default SliderComp
+export default memo(SliderComp)

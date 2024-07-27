@@ -64,9 +64,18 @@ const cartSlice = createSlice({
                 return cartTotal += cartItem.price * cartItem.quantity
             }, 0)
             state.itemCount = state.carts.length
+        },
+        updateCartQuantity: (state, action) => {
+            const { id, quantity } = action.payload;
+            const item = state.carts.find(item => item.id === id);
+            if (item) {
+                item.quantity = quantity;
+                item.totalPrice = item.price * quantity;
+                storeInLocalStorage(state.carts);
+            }
         }
     }
 })
 
-export const { addToCart, removeFromCart, clearCart, getCartTotal } = cartSlice.actions
+export const { addToCart, removeFromCart, clearCart, getCartTotal,updateCartQuantity } = cartSlice.actions
 export default cartSlice.reducer

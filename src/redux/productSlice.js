@@ -6,6 +6,7 @@ const initialState = {
     productsState: STATUS.IDLE,
     productDetail: {},
     productDetailStatus: STATUS.IDLE,
+    searchKeyword: ""
 };
 
 export const getProducts = createAsyncThunk('getProducts', async () => {
@@ -25,11 +26,22 @@ export const getDetailProduct = createAsyncThunk('getProduct', async (id) => {
     const data = await response.json();
     return data;
 });
+export const searchProducts = createAsyncThunk('searchProducts', async (keyword) => {
+    const response = await fetch('https://fakestoreapi.com/products');
+    const data = await response.json();
+    return data.filter(product =>
+        product.title.toLowerCase().includes(keyword.toLowerCase())
+    );
+});
 
 const productSlice = createSlice({
     name: "product",
     initialState,
-    reducers: {},
+    reducers: {
+        setSearchKeyword: (state, action) => {
+            state.searchKeyword = action.payload;
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(getProducts.pending, (state) => {
@@ -61,8 +73,11 @@ const productSlice = createSlice({
             })
             .addCase(getCategoryProducts.rejected, (state) => {
                 state.productsState = STATUS.FAIL;
+            })
+            .addCase(searchProducts.fulfilled, (state, action) => {
+                state.products = action.payload;
             });
     },
 });
-
+export const { setSearchKeyword } = productSlice.actions;
 export default productSlice.reducer;

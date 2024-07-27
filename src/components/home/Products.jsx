@@ -1,49 +1,71 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ReactPaginate from 'react-paginate';
 import { useDispatch, useSelector } from 'react-redux';
-import { getCategoryProducts, getProducts } from '../../redux/productSlice';
+import { getCategoryProducts, getProducts, searchProducts } from '../../redux/productSlice';
 import Loading from '../Loading/Loading';
 import Product from './Product';
 
-const Products = ({category,sort}) => {
-
+const Products = ({ category, sort }) => {
+    console.log("products rendered");
     const dispatch = useDispatch();
-    const { products, productsStatus } = useSelector(state => state.products)
+    const { products, productsStatus, searchKeyword } = useSelector(state => state.products);
 
     const [itemsOffset, setItemOffset] = useState(0);
 
-    const itemsPerpage = 6;
-    const endOffset = itemsOffset + itemsPerpage;
-    const currentItems = products.slice(itemsOffset, endOffset);
-    const pageCount = Math.ceil(products.length / itemsPerpage);
+    const itemsPerPage = 6;
+    const endOffset = itemsOffset + itemsPerPage;
+    const pageCount = Math.ceil(products.length / itemsPerPage);
 
-    const handlePageClick = (e) =>{
-        const newOffset = (e.selected * itemsPerpage) % products.length;
+    const currentItems = useMemo(() => {
+        let filteredProducts = products;
+
+        if (searchKeyword.trim() !== '') {
+            const keywordLower = searchKeyword.toLowerCase();
+            filteredProducts = filteredProducts.filter(product =>
+                product.title.toLowerCase().includes(keywordLower)
+            );
+        }
+
+        return filteredProducts
+            .slice(itemsOffset, endOffset)
+            .sort((a, b) => {
+                if (sort === "inc") return a.price - b.price;
+                if (sort === "dec") return b.price - a.price;
+                return 0;
+            });
+    }, [products, itemsOffset, endOffset, sort, searchKeyword]);
+
+    const handlePageClick = useCallback((e) => {
+        const newOffset = (e.selected * itemsPerPage) % products.length;
         setItemOffset(newOffset);
-
-    }
-
-    console.log(products, "products")
+    }, [itemsPerPage, products.length]);
 
     useEffect(() => {
-        if(category){
-            dispatch(getCategoryProducts(category))
-        }else{
-            dispatch(getProducts())
+        if (searchKeyword.trim() === '') {
+            if (category) {
+                dispatch(getCategoryProducts(category));
+            } else {
+                dispatch(getProducts());
+            }
+        } else {
+            dispatch(searchProducts(searchKeyword));
         }
-        
-    }, [dispatch,category])
+    }, [dispatch, category, searchKeyword]);
 
     return (
-        <div >
+        <div>
             {
                 productsStatus === "LOADING" ? <Loading /> :
                     <>
                         <div className='flex flex-wrap'>
                             {
-                                currentItems?.sort((a,b)=> sort=="inc" ?a.price-b.price:sort=="dec" ?b.price-a.price:null).map((product, i) => (
-                                    <Product key={i} product={product} /> // 'return' ekledik.
-                                ))
+                                currentItems.length === 0 ? (
+                                    <div>Aramanıza uygun ürün bulunamadı.</div>
+                                ) : (
+                                    currentItems.map((product) => (
+                                        <Product key={product.id} product={product} />
+                                    ))
+                                )
                             }
                         </div>
                         <ReactPaginate
@@ -59,7 +81,7 @@ const Products = ({category,sort}) => {
                     </>
             }
         </div>
-    )
-}
+    );
+};
 
-export default Products
+export default Products;

@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { memo, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CartComp from '../components/cart/CartComp';
 import { getCartTotal } from '../redux/cartSlice';
 
 const Cart = () => {
+    console.log("cart rendere")
     const dispatch = useDispatch();
     const { carts,totalAmount,itemCount } = useSelector(state => state.carts)
 
@@ -32,4 +33,4 @@ const Cart = () => {
     )
 }
 
-export default Cart
+export default memo(Cart)
